@@ -1,0 +1,49 @@
+.cookie-section-progress {
+  align-items: center;
+  display: inline-flex;
+  gap: 7px;
+  margin-inline-start: 10px;
+  max-width: 100%;
+  white-space: nowrap;
+  color: #c9d4e6;
+  font: 500 11px/1.3 system-ui, sans-serif;
+}
+
+.cookie-section-progress__percent {
+  color: #facc15;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cookie-section-progress__track {
+  display: inline-block;
+  width: 66px;
+  height: 5px;
+  overflow: hidden;
+  flex: none;
+  border-radius: 99px;
+  background: #344256;
+}
+
+.cookie-section-progress__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: #facc15;
+  transition: width 180ms ease;
+}
+
+.cookie-section-progress__time {
+  color: #9caec5;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .cookie-section-progress__time {
+    display: none;
+  }
+  .cookie-section-progress__track {
+    width: 40px;
+  }
+}
