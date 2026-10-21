@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Scrimba Section Progress",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Shows the current Scrimba section's progress beside the lesson timer.",
   "icons": {
     "16": "icons/icon-16.png",

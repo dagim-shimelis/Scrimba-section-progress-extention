@@ -45,12 +45,12 @@ lesson timer   section complete     estimated time / section duration
 - **2.1 hrs** is the section duration displayed by Scrimba.
 - **≈53 min** is `42% × 2.1 hours`, rounded to minutes. It is an estimate because Scrimba rounds the displayed duration and the extension does not track your watch time.
 
-The extension briefly opens Scrimba's lesson outline to read this data, closes it, and keeps the badge visible. On narrow screens it hides the time summary while retaining the percentage and bar.
+When Scrimba exposes a reliable open/closed state, the extension briefly opens the lesson outline to read section data and closes only the panel it opened. It leaves an already-open outline alone and stops controlling it when you interact or navigate. A failed read gets one delayed retry. If the panel state cannot be determined, open the lesson outline manually to populate the badge. On narrow screens it hides the time summary while retaining the percentage and bar.
 
 ## Scope and privacy
 
 - Loads on `https://scrimba.com/*` and shows a badge only when lesson data is available.
-- Reads the current page's lesson outline; it does not collect or send browsing data.
+- Processes the current lesson URL and section outline locally in memory; it does not transmit them or save them to persistent storage.
 - Requests no additional extension API permissions.
 - Shows no badge if Scrimba does not expose the section data. A change to Scrimba's page markup may require updating the selectors.
 
@@ -65,4 +65,12 @@ icons/              Extension icon in browser-required sizes
 assets/             README screenshots
 ```
 
-The extension icon adapts a supplied mark labelled “Tones at Paradiso, 2025” over a gradient based on Scrimba's favicon. Permission to redistribute the mark has not been verified.
+The extension icon is original artwork, as confirmed by the project owner.
+
+## Privacy policy and store assets
+
+See [Privacy Policy](PRIVACY.md) for data handling details. Before submission, publish it at a publicly accessible URL and enter that URL in the Chrome Web Store dashboard. Store listing assets and submission notes are in `store/`.
+
+## Checks
+
+Run `node --test tests/progress.test.cjs` and `sh build.sh`. Live authenticated Scrimba testing is still required before release.

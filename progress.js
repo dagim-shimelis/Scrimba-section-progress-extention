@@ -4,9 +4,9 @@
   const WIDGET_CLASS = "cookie-section-progress";
   const TIMER_SELECTOR = ".breadcrumbs scrim-clip-time-labels";
   const sectionCache = new Map();
-  const attemptedRoutes = new Set();
+  const attempts = new Map();
   let updateQueued = false;
-  let autoOpenedRoute = null;
+  let outlineAttempt = null;
 
   function lessonRoute() {
     const parts = location.pathname.split("/").filter(Boolean);
@@ -62,30 +62,49 @@
     }));
   }
 
+  function outlineIsOpen(toc) {
+    const expanded = toc.getAttribute("aria-expanded");
+    if (expanded === "true") return true;
+    if (expanded === "false") return false;
+    if ([...document.querySelectorAll("toc-group")].some((group) => group.getClientRects().length)) return true;
+    // shortcut: unknown markup requires opening the outline manually, add a verified selector when Scrimba exposes one.
+    return null;
+  }
+
+  function finishOutlineAttempt(close) {
+    const attempt = outlineAttempt;
+    if (!attempt) return;
+    outlineAttempt = null;
+    clearTimeout(attempt.timeout);
+    if (close && lessonRoute() === attempt.route && attempt.toc.isConnected &&
+        document.querySelector(".breadcrumbs .toc") === attempt.toc && outlineIsOpen(attempt.toc) === true) {
+      toggleOutline(attempt.toc);
+    }
+  }
+
   function update() {
     updateQueued = false;
     const timer = document.querySelector(TIMER_SELECTOR);
     const route = lessonRoute();
+    if (outlineAttempt && (outlineAttempt.route !== route || !timer)) finishOutlineAttempt(false);
     const liveSection = timer && currentSection();
     if (route && liveSection) sectionCache.set(route, liveSection);
-
-    if (route && autoOpenedRoute === route && liveSection) {
-      autoOpenedRoute = null;
-      const toc = document.querySelector(".breadcrumbs .toc");
-      if (toc) toggleOutline(toc);
-    }
+    if (liveSection) finishOutlineAttempt(true);
 
     const section = liveSection || sectionCache.get(route);
-    if (timer && route && !section && !attemptedRoutes.has(route)) {
+    const previous = attempts.get(route);
+    if (timer && route && !section && !outlineAttempt &&
+        (!previous || (previous.count < 2 && Date.now() >= previous.retryAt))) {
       const toc = document.querySelector(".breadcrumbs .toc");
-      if (toc) {
-        attemptedRoutes.add(route);
-        autoOpenedRoute = route;
+      if (toc && outlineIsOpen(toc) === false) {
+        attempts.set(route, { count: (previous?.count || 0) + 1, retryAt: Date.now() + 6500 });
+        const attempt = { route, toc, timeout: null };
+        outlineAttempt = attempt;
         toggleOutline(toc);
-        setTimeout(() => {
-          if (autoOpenedRoute !== route) return;
-          autoOpenedRoute = null;
-          toggleOutline(toc);
+        attempt.timeout = setTimeout(() => {
+          if (outlineAttempt !== attempt) return;
+          finishOutlineAttempt(true);
+          setTimeout(queueUpdate, 5000);
         }, 1500);
       }
     }
@@ -122,6 +141,16 @@
     updateQueued = true;
     requestAnimationFrame(update);
   }
+
+  function relinquishOutline(event) {
+    const route = lessonRoute();
+    if (!event.isTrusted || !attempts.has(route)) return;
+    attempts.set(route, { count: 2, retryAt: Infinity });
+    finishOutlineAttempt(false);
+  }
+  document.addEventListener("pointerdown", relinquishOutline, true);
+  document.addEventListener("keydown", relinquishOutline, true);
+  window.addEventListener("popstate", queueUpdate);
 
   const observer = new MutationObserver((mutations) => {
     if (mutations.every((mutation) => mutation.target.closest?.(`.${WIDGET_CLASS}`))) return;
